@@ -4,3 +4,6 @@
 
 vim.o.exrc = true
 vim.o.secure = true -- still requires manual trust confirmation per file, safer default
+
+vim.o.shell = "pwsh"
+vim.o.shellcmdflag = "-NoLogo -ExecutionPolicy RemoteSigned -Command"
