@@ -11,4 +11,4 @@ vim.o.shell = "pwsh"
 vim.o.shellcmdflag = "-NoLogo -ExecutionPolicy RemoteSigned -Command"
 
 -- Set the scroll to be centre of the screen when moving up and down
-vim.o.scrolloff = 999
+vim.o.scrolloff = 8
