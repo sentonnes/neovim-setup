@@ -12,3 +12,12 @@ vim.o.shellcmdflag = "-NoLogo -ExecutionPolicy RemoteSigned -Command"
 
 -- Set the scroll to be centre of the screen when moving up and down
 vim.o.scrolloff = 8
+vim.o.sidescrolloff = 8
+
+-- Wrapping: wrap long lines at word boundaries, keep indentation
+vim.o.wrap = true
+vim.o.linebreak = true
+vim.o.breakindent = true
+vim.o.showbreak = "↪ "
+vim.o.textwidth = 0
+vim.o.wrapmargin = 0
