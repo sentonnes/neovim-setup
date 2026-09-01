@@ -7,6 +7,19 @@
 -- Or remove existing autocmds by their group name (which is prefixed with `lazyvim_` for the defaults)
 -- e.g. vim.api.nvim_del_augroup_by_name("lazyvim_wrap_spell")
 
+-- Auto-restore the persistence.nvim session when Neovim starts with no file arguments
+-- (e.g. `nvim` or `nvim .`), so you don't have to manually press <leader>qs each time.
+vim.api.nvim_create_autocmd("VimEnter", {
+  group = vim.api.nvim_create_augroup("restore_session", { clear = true }),
+  callback = function()
+    -- argc() == 0 means no file/dir args were passed directly to a buffer
+    if vim.fn.argc() == 0 then
+      require("persistence").load()
+    end
+  end,
+  nested = true, -- allow this autocmd to trigger other autocmds (e.g. BufEnter, FileType)
+})
+
 -- Terraform's `terraform validate` (run via nvim-lint's `terraform_validate`)
 -- checks the *whole module*, but nvim-lint only applies the resulting
 -- diagnostics to the buffer that triggered the lint (the file you just saved).
