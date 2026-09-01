@@ -14,6 +14,10 @@ local excluded_filetypes = {
 vim.api.nvim_create_autocmd({ "FocusLost", "BufLeave", "InsertLeave" }, {
   pattern = "*",
   callback = function()
+    -- skip terminal, quickfix, help, prompt, nofile, etc. buffers entirely
+    if vim.bo.buftype ~= "" then
+      return
+    end
     if not vim.bo.modifiable or not vim.bo.modified then
       return
     end
