@@ -2,3 +2,5 @@
 require("config.lazy")
 
 require("config.autosave")
+require("config.scratch")
+
