@@ -11,6 +11,11 @@ return {
         codecompanion = { "codecompanion" },
       },
       default = { "lsp", "path", "snippets", "buffer" },
+      providers = {
+        copilot = {
+          enabled = false,
+        },
+      },
     },
   },
 }
