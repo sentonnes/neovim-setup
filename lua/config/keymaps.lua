@@ -8,3 +8,7 @@ vim.keymap.set("n", "k", "gk")
 
 -- Open a scratch buffer (throwaway, no save prompt)
 vim.keymap.set("n", "<leader>sc", "<cmd>Scratch<cr>", { desc = "Open Scratch Buffer" })
+
+-- Paste over a visual selection without clobbering the unnamed register
+-- (the replaced text goes to the black hole register instead of overwriting your clipboard/yank)
+vim.keymap.set("x", "p", '"_dP', { desc = "Paste without overwriting register" })
