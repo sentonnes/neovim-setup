@@ -18,12 +18,12 @@ See the [LazyVim documentation](https://lazyvim.github.io/installation) for gene
 
 ## ⌨️ Key Custom Keymaps
 
-| Mode | Keymap | Action |
-| --- | --- | --- |
-| `n`, `v` | `<C-a>` | Open CodeCompanion Actions |
-| `n`, `v` | `<leader>a` | Toggle CodeCompanion Chat |
-| `v` | `ga` | Add selection to CodeCompanion Chat |
-| `n` | `<leader>gn` | Open Neogit |
+| Mode     | Keymap       | Action                              |
+| -------- | ------------ | ----------------------------------- |
+| `n`, `v` | `<C-a>`      | Open CodeCompanion Actions          |
+| `n`, `v` | `<leader>a`  | Toggle CodeCompanion Chat           |
+| `v`      | `ga`         | Add selection to CodeCompanion Chat |
+| `n`      | `<leader>gn` | Open Neogit                         |
 
 See [`lua/config/keymaps.lua`](lua/config/keymaps.lua) for the full list of custom keymaps.
 
@@ -55,4 +55,3 @@ See [`lua/config/keymaps.lua`](lua/config/keymaps.lua) for the full list of cust
 2. Clone this repo into that location.
 3. Launch `nvim` and let `lazy.nvim` install the plugins.
 4. Ensure GitHub Copilot is authenticated for `codecompanion.nvim` to work (`:Copilot auth` if using a Copilot plugin, or follow the [codecompanion.nvim Copilot setup](https://codecompanion.olimorris.dev)).
-
