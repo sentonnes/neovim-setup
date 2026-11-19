@@ -12,13 +12,13 @@ return {
   opts = {
     interactions = {
       chat = {
-        adapter = { name = "copilot", model = "claude-opus-5.5" },
+        adapter = { name = "copilot", model = "auto" },
       },
       inline = {
-        adapter = { name = "copilot", model = "claude-opus-5.5" },
+        adapter = { name = "copilot", model = "auto" },
       },
       agent = {
-        adapter = { name = "copilot", model = "claude-opus-5.5" },
+        adapter = { name = "copilot", model = "auto" },
       },
     },
     completion = {
