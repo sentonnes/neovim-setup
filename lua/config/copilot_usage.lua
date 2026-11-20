@@ -5,7 +5,6 @@
 local M = {}
 
 local INTERVAL_MS = 1 * 60 * 1000 -- refresh every 1 minute(s)
-local DAY_MS = 24 * 60 * 60 * 1000
 
 local state = {
   used = nil, -- latest credits_used
@@ -45,6 +44,7 @@ function M.refresh()
       if not state.baseline or state.used < state.baseline then
         state.baseline = state.used
       end
+      M.track_monthly_usage()
       pcall(function()
         require("lualine").refresh()
       end)
@@ -85,44 +85,76 @@ end
 
 -- Monthly usage tracking ---------------------------------------------------
 
+-- Pending (unwritten) usage: usage_data[date][repo] = credits
 local usage_data = {}
+local last_tracked = nil -- credits_used at the last tracking point
 
 local function get_repository_name()
-  return vim.fn.systemlist("git rev-parse --show-toplevel")[1] or "unknown"
+  local root = vim.fs.root(vim.fn.getcwd(), ".git")
+  return root and vim.fs.normalize(root) or "unknown"
 end
 
+--- Record credits spent since the last call against today's date and repo.
+--- Uses the difference in credits_used, so repeated calls never double count.
 function M.track_monthly_usage()
+  if not state.used then
+    return
+  end
+  if not last_tracked or state.used < last_tracked then
+    -- First reading, or the quota period rolled over
+    last_tracked = state.used
+    return
+  end
+  local delta = state.used - last_tracked
+  if delta <= 0 then
+    return
+  end
+  last_tracked = state.used
+
   local date = os.date("%Y-%m-%d")
   local repo_name = get_repository_name()
-  local delta = state.used or 0
-
   usage_data[date] = usage_data[date] or {}
   usage_data[date][repo_name] = (usage_data[date][repo_name] or 0) + delta
 end
 
+--- Merge pending usage into the monthly file(s), summing with existing totals.
 local function write_monthly_usage()
-  local current_time = os.date("%Y-%m") -- format YYYY-MM
-  local filename = string.format("%s/credit_usage_%s.txt", vim.fn.stdpath("data"), current_time)
-  local file = io.open(filename, "a+")
-  if file then
-    for date, usage in pairs(usage_data) do
-      for repo, total_usage in pairs(usage) do
-        file:write(string.format("%s [%s]: %d\n", date, repo, total_usage))
+  local by_month = {}
+  for date, repos in pairs(usage_data) do
+    local month = date:sub(1, 7) -- YYYY-MM
+    by_month[month] = by_month[month] or {}
+    by_month[month][date] = repos
+  end
+
+  for month, dates in pairs(by_month) do
+    local filename = string.format("%s/credit_usage_%s.txt", vim.fn.stdpath("data"), month)
+    local totals = {}
+    if vim.uv.fs_stat(filename) then
+      for _, line in ipairs(vim.fn.readfile(filename)) do
+        local date, repo, n = line:match("^(%S+) %[(.*)%]: (%d+)$")
+        if date then
+          totals[date] = totals[date] or {}
+          totals[date][repo] = (totals[date][repo] or 0) + tonumber(n)
+        end
       end
     end
-    file:close()
+    for date, repos in pairs(dates) do
+      totals[date] = totals[date] or {}
+      for repo, n in pairs(repos) do
+        totals[date][repo] = (totals[date][repo] or 0) + n
+      end
+    end
+
+    local lines = {}
+    for date, repos in pairs(totals) do
+      for repo, n in pairs(repos) do
+        table.insert(lines, string.format("%s [%s]: %d", date, repo, n))
+      end
+    end
+    table.sort(lines)
+    vim.fn.writefile(lines, filename)
   end
   usage_data = {}
-end
-
-local function check_and_write()
-  local current_time = os.date("%Y-%m-%d")
-  local first_day = os.date("%Y-%m") .. "-01"
-  local next_day = os.date("%Y-%m-%d", os.time() + 86400)
-
-  if current_time >= first_day and current_time < next_day then
-    write_monthly_usage()
-  end
 end
 
 -- Setup --------------------------------------------------------------------
@@ -138,17 +170,19 @@ function M.setup()
   local timer = vim.uv.new_timer()
   timer:start(INTERVAL_MS, INTERVAL_MS, vim.schedule_wrap(M.refresh))
 
-  -- Daily write of tracked usage
-  local daily_timer = vim.uv.new_timer()
-  daily_timer:start(DAY_MS, DAY_MS, vim.schedule_wrap(check_and_write))
+  -- Persist tracked usage when Neovim exits
+  vim.api.nvim_create_autocmd("VimLeavePre", {
+    callback = function()
+      M.track_monthly_usage()
+      write_monthly_usage()
+    end,
+  })
 
   vim.api.nvim_create_user_command("CopilotUsage", function()
     M.refresh()
     vim.notify(M.details(), vim.log.levels.INFO, { title = "Copilot" })
     M.track_monthly_usage()
-    if os.date("%Y-%m-%d") == state.reset then
-      write_monthly_usage()
-    end
+    write_monthly_usage()
   end, { desc = "Show Copilot credit usage" })
 
   -- Track the selected model for the latest Copilot request.
