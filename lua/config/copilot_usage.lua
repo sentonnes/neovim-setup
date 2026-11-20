@@ -5,6 +5,7 @@
 local M = {}
 
 local INTERVAL_MS = 1 * 60 * 1000 -- refresh every 1 minute(s)
+local SAVE_INTERVAL_MS = 60 * 60 * 1000 -- write usage to disk every hour
 
 local state = {
   used = nil, -- latest credits_used
@@ -169,6 +170,10 @@ function M.setup()
   -- Periodic usage refresh
   local timer = vim.uv.new_timer()
   timer:start(INTERVAL_MS, INTERVAL_MS, vim.schedule_wrap(M.refresh))
+
+  -- Persist tracked usage hourly (Neovim may stay open for days)
+  local save_timer = vim.uv.new_timer()
+  save_timer:start(SAVE_INTERVAL_MS, SAVE_INTERVAL_MS, vim.schedule_wrap(write_monthly_usage))
 
   -- Persist tracked usage when Neovim exits
   vim.api.nvim_create_autocmd("VimLeavePre", {
