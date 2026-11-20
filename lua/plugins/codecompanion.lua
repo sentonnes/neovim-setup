@@ -24,5 +24,25 @@ return {
     completion = {
       blink = { enabled = true },
     },
+    mcp = {
+      servers = {
+        github = function()
+          local token = vim.trim(vim.fn.system({ "gh", "auth", "token" }))
+          if vim.v.shell_error ~= 0 or token == "" then
+            token = os.getenv("GITHUB_TOKEN")
+          end
+          return {
+            cmd = {
+              "docker", "run", "-i", "--rm", "-e", "GITHUB_PERSONAL_ACCESS_TOKEN",
+              "ghcr.io/github/github-mcp-server",
+            },
+            env = { GITHUB_PERSONAL_ACCESS_TOKEN = token },
+          }
+        end,
+      },
+      opts = {
+        default_servers = { "github" },
+      },
+    },
   },
 }
